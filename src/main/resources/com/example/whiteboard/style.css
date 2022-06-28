@@ -1,0 +1,59 @@
+.text-area, .text-area .viewport, .text-area .content {
+    -fx-background-color: transparent;
+}
+
+#drawPane {
+    -fx-background-color: white;
+}
+
+#export .ikonli-font-icon {
+    -fx-icon-code: "fas-file-export";
+}
+
+#pointer .ikonli-font-icon {
+    -fx-icon-code: "fas-hand-pointer";
+}
+
+#pen .ikonli-font-icon {
+    -fx-icon-code: "fas-pen-nib";
+}
+
+#line .ikonli-font-icon {
+    -fx-icon-code: "fas-slash";
+}
+
+#rect .ikonli-font-icon {
+    -fx-icon-code: "fas-vector-square";
+}
+
+#circle .ikonli-font-icon {
+    -fx-icon-code: "far-circle";
+}
+
+#text .ikonli-font-icon {
+    -fx-icon-code: "fas-i-cursor";
+}
+
+#eraser .ikonli-font-icon {
+    -fx-icon-code: "fas-eraser";
+}
+
+#undo .ikonli-font-icon {
+    -fx-icon-code: "fas-undo";
+}
+
+#redo .ikonli-font-icon {
+    -fx-icon-code: "fas-redo";
+}
+
+#clear .ikonli-font-icon {
+    -fx-icon-code: "fas-trash";
+}
+
+#fontPick .ikonli-font-icon {
+    -fx-icon-code: "fas-font";
+}
+
+#addPage .ikonli-font-icon {
+    -fx-icon-code: "fas-plus";
+}
