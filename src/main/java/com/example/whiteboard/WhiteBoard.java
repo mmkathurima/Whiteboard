@@ -26,9 +26,12 @@ public class WhiteBoard extends Application {
             public void handle(WindowEvent windowEvent) {
                 for (Tab t : ((TabPane) scene.getRoot()).getTabs()) {
                     WhiteBoardPage page = ((WhiteBoardPage) t);
-                    if (page.isDirty(windowEvent)) if (page.confirmExit(windowEvent, new Alert(Alert.AlertType.WARNING,
-                            "You have unsaved changes.\nAre you sure you want to exit this application?",
-                            ButtonType.OK, ButtonType.CANCEL).showAndWait())) break;
+                    if (page.isDirty(windowEvent)) {
+                        page.confirmExit(windowEvent, new Alert(Alert.AlertType.WARNING,
+                                "You have unsaved changes.\nAre you sure you want to exit this application?",
+                                ButtonType.OK, ButtonType.CANCEL).showAndWait());
+                        break;
+                    }
                 }
             }
         });
