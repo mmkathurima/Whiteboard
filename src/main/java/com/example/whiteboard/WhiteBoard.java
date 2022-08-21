@@ -4,6 +4,8 @@ import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.stage.Stage;
@@ -16,18 +18,21 @@ public class WhiteBoard extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(getClass().getResource("whiteboard.fxml"))),
-                950, 600);
+                1020, 600);
         scene.getStylesheets().add(String.valueOf(getClass().getResource("style.css")));
         //stage.setTitle("Hello!");
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent windowEvent) {
                 for (Tab t : ((TabPane) scene.getRoot()).getTabs()) {
-                    if (((WhiteBoardPage) t).checkDirty(windowEvent)) break;
+                    WhiteBoardPage page = ((WhiteBoardPage) t);
+                    if (page.isDirty(windowEvent)) if (page.confirmExit(windowEvent, new Alert(Alert.AlertType.WARNING,
+                            "You have unsaved changes.\nAre you sure you want to exit this application?",
+                            ButtonType.OK, ButtonType.CANCEL).showAndWait())) break;
                 }
             }
         });
-        stage.setTitle("WhiteBoard BETA");
+        stage.setTitle("WhiteBoard");
         stage.setScene(scene);
         stage.show();
     }

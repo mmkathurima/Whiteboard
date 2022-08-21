@@ -85,11 +85,21 @@ public class WhiteBoardPage extends javafx.scene.control.Tab {
             public void handle(Event event) {
                 //System.out.println(drawPane.getChildren().size());
                 if (getTabPane().getTabs().size() == 1) {
-                    event.consume();
-                    //checkDirty(event);
-                    //Platform.exit();
-                } else {
-                    checkDirty(event);
+                    if (isDirty(event)) {
+                        if (confirmExit(event, new Alert(Alert.AlertType.WARNING,
+                                "You have unsaved changes.\nAre you sure you want to exit this application?",
+                                ButtonType.OK, ButtonType.CANCEL).showAndWait())) {
+                            Platform.exit();
+                        }
+                    } else if (confirmExit(event, new Alert(Alert.AlertType.WARNING,
+                            "Are you sure you want to exit this application?",
+                            ButtonType.OK, ButtonType.CANCEL).showAndWait())) {
+                        Platform.exit();
+                    }
+                } else if (getTabPane().getTabs().size() > 1) {
+                    if (isDirty(event)) confirmExit(event, new Alert(Alert.AlertType.WARNING,
+                            "You have unsaved changes.\nAre you sure you want to close this tab?",
+                            ButtonType.OK, ButtonType.CANCEL).showAndWait());
                 }
             }
         });
@@ -201,30 +211,20 @@ public class WhiteBoardPage extends javafx.scene.control.Tab {
         this.setContent(borderPane);
     }
 
-    protected boolean checkDirty(Event event) {
-        if (drawPane.getChildren().contains(iv)) {
-            if (drawPane.getChildren().size() > 1) {
-                confirm(event);
-                return true;
-            }
-        } else {
-            if (drawPane.getChildren().size() > 0) {
-                confirm(event);
-                return true;
-            }
-        }
-        return false;
+    protected boolean isDirty(Event event) {
+        return drawPane.getChildren().contains(iv) ?
+                drawPane.getChildren().size() > 1 : drawPane.getChildren().size() > 0;
     }
 
-    private void confirm(Event event) {
-        Optional<ButtonType> dialog = new Alert(Alert.AlertType.WARNING,
-                "You have unsaved changes.\nAre you sure you want to close this tab?",
-                ButtonType.OK, ButtonType.CANCEL).showAndWait();
+    public boolean confirmExit(Event event, Optional<ButtonType> dialog) {
         if (dialog.isPresent()) {
             if (dialog.get() == ButtonType.CANCEL) {
                 event.consume();
+                return false;
             }
+            return true;
         }
+        return false;
     }
 
     enum Tools {
@@ -428,10 +428,10 @@ public class WhiteBoardPage extends javafx.scene.control.Tab {
                                     (int) (eraserColor.getGreen() * 255),
                                     (int) (eraserColor.getBlue() * 255), 0.2f) +
                             "; -fx-text-fill: " +
-                            String.format("#%02X%02X%02X",
+                            String.format("#%02X%02X%02X;",
                                     (int) (color.getRed() * 255),
                                     (int) (color.getGreen() * 255),
-                                    (int) (color.getBlue() * 255)) + ";");
+                                    (int) (color.getBlue() * 255)));
                     //System.out.println(addText.getStyle());
                     break;
                 case CIRCLE:
