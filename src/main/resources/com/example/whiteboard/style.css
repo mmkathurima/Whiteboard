@@ -14,6 +14,11 @@
     -fx-icon-code: "fas-hand-pointer";
 }
 
+#arrow .ikonli-font-icon {
+    -fx-icon-code: "fas-arrow-right";
+    -fx-rotate: -45;
+}
+
 #pen .ikonli-font-icon {
     -fx-icon-code: "fas-pen-nib";
 }

@@ -15,32 +15,38 @@ import java.io.IOException;
 import java.util.Objects;
 
 public class WhiteBoard extends Application {
+    public WhiteBoard() {
+        super();
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
-        Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(getClass().getResource("whiteboard.fxml"))),
-                1020, 600);
-        scene.getStylesheets().add(String.valueOf(getClass().getResource("style.css")));
-        //stage.setTitle("Hello!");
+        final Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(this.getClass().getResource("whiteboard.fxml"))), 1020.0, 600.0);
+        scene.getStylesheets().add(String.valueOf(this.getClass().getResource("style.css")));
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent windowEvent) {
-                for (Tab t : ((TabPane) scene.getRoot()).getTabs()) {
-                    WhiteBoardPage page = ((WhiteBoardPage) t);
-                    if (page.isDirty(windowEvent)) {
-                        page.confirmExit(windowEvent, new Alert(Alert.AlertType.WARNING,
-                                "You have unsaved changes.\nAre you sure you want to exit this application?",
-                                ButtonType.OK, ButtonType.CANCEL).showAndWait());
-                        break;
-                    }
-                }
-            }
-        });
+                                    public void handle(WindowEvent windowEvent) {
+                                        for (Tab t : ((TabPane) scene.getRoot()).getTabs()) {
+                                            WhiteBoardPage page = (WhiteBoardPage) t;
+                                            if (page.isDirty(windowEvent)) {
+                                                page.confirmExit(windowEvent, new Alert(Alert.AlertType.WARNING,
+                                                                "You have unsaved changes.\nAre you sure you want to exit this application?",
+                                                                ButtonType.OK,
+                                                                ButtonType.CANCEL
+                                                        ).showAndWait()
+                                                );
+                                                break;
+                                            }
+                                        }
+
+                                    }
+                                }
+        );
         stage.setTitle("WhiteBoard");
         stage.setScene(scene);
         stage.show();
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }

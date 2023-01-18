@@ -44,176 +44,219 @@ import java.io.IOException;
 import java.util.List;
 import java.util.*;
 
-public class WhiteBoardPage extends javafx.scene.control.Tab {
+public class WhiteBoardPage extends Tab {
     BorderPane borderPane = new BorderPane();
     Pane drawPane = new Pane();
     ToolBar toolBar = new ToolBar();
-    private final ToggleButton pen = new ToggleButton("Pen"), line_ = new ToggleButton("Line"),
-            rect = new ToggleButton("Rectangle"), circle = new ToggleButton("Circle"),
-            text_ = new ToggleButton("Text"), eraser = new ToggleButton("Eraser"),
-            pointer = new ToggleButton("Pointer");
-    private final Button undo = new Button("Undo"), redo = new Button("Redo"), clear = new Button("Clear"),
-            fontPick = new Button("Fonts"), export = new Button("Save As"), addPage = new Button();
+    private final ToggleButton pen = new ToggleButton("Pen");
+    private final ToggleButton line_ = new ToggleButton("Line");
+    private final ToggleButton rect = new ToggleButton("Rectangle");
+    private final ToggleButton circle = new ToggleButton("Circle");
+    private final ToggleButton text_ = new ToggleButton("Text");
+    private final ToggleButton eraser = new ToggleButton("Eraser");
+    private final ToggleButton pointer = new ToggleButton("Pointer");
+    private final ToggleButton arrow = new ToggleButton("Arrow");
+    private final Button undo = new Button("Undo");
+    private final Button redo = new Button("Redo");
+    private final Button clear = new Button("Clear");
+    private final Button fontPick = new Button("Fonts");
+    private final Button export = new Button("Save As");
+    private final Button addPage = new Button();
     private final Text thiccness = new Text();
     private final ColorPicker colorPicker = new ColorPicker();
     private final Slider thicc = new Slider();
-    private final ChoiceBox<String> bg = new ChoiceBox<>();
-
+    private final ChoiceBox<String> bg = new ChoiceBox<String>();
     private Font defaultFont;
-    private Color color = Color.BLACK, eraserColor = null;
+    private Color color = Color.BLACK;
+    private Color eraserColor = null;
     private Line drawLine;
     private Path path;
     private Rectangle rectangle;
     private Ellipse ellipse;
-
-    private Tools tool;
-    private final Stack<Node> last = new Stack<>();
-    private final List<Tools> toolsList = Arrays.asList(Tools.values());
-    private final List<ButtonBase> hist = new ArrayList<>();
-
+    private WhiteBoardPage.Tools tool;
+    private final Stack<Node> last = new Stack<Node>();
+    private final List<WhiteBoardPage.Tools> toolsList = Arrays.asList(WhiteBoardPage.Tools.values());
+    private final List<ButtonBase> hist = new ArrayList<ButtonBase>();
     private TextArea addText;
     private StackPane stackPane;
-    private final WhiteBoardPage me = this;
     ImageView iv = new ImageView();
-
-    private double x0, y0, x1, y1, startingPosX, startingPosY;
+    private double x0;
+    private double y0;
+    private double x1;
+    private double y1;
+    private double startingPosX;
+    private double startingPosY;
+    private double endX;
+    private double endY;
     private static int counter = 2;
 
     public WhiteBoardPage() {
+        super();
         this.setOnCloseRequest(new EventHandler<Event>() {
-            @Override
-            public void handle(Event event) {
-                //System.out.println(drawPane.getChildren().size());
-                if (getTabPane().getTabs().size() == 1) {
-                    if (isDirty(event)) {
-                        if (confirmExit(event, new Alert(Alert.AlertType.WARNING,
-                                "You have unsaved changes.\nAre you sure you want to exit this application?",
-                                ButtonType.OK, ButtonType.CANCEL).showAndWait())) {
-                            Platform.exit();
+                    @Override
+                    public void handle(Event event) {
+                        if (WhiteBoardPage.this.getTabPane().getTabs().size() == 1) {
+                            if (WhiteBoardPage.this.isDirty(event)) {
+                                if (WhiteBoardPage.this.confirmExit(
+                                        event,
+                                        new Alert(
+                                                Alert.AlertType.WARNING,
+                                                "You have unsaved changes.\n" +
+                                                        "Are you sure you want to exit this application?",
+                                                ButtonType.OK,
+                                                ButtonType.CANCEL
+                                        ).showAndWait())) {
+                                    Platform.exit();
+                                }
+                            } else if (WhiteBoardPage.this.confirmExit(
+                                    event,
+                                    new Alert(Alert.AlertType.WARNING, "Are you sure you want to exit this application?", ButtonType.OK, ButtonType.CANCEL).showAndWait()
+                            )) {
+                                Platform.exit();
+                            }
+                        } else if (WhiteBoardPage.this.getTabPane().getTabs().size() > 1 && WhiteBoardPage.this.isDirty(event)) {
+                            WhiteBoardPage.this.confirmExit(
+                                    event,
+                                    new Alert(
+                                            Alert.AlertType.WARNING, "You have unsaved changes.\nAre you sure you want to close this tab?", ButtonType.OK, ButtonType.CANCEL
+                                    )
+                                            .showAndWait()
+                            );
                         }
-                    } else if (confirmExit(event, new Alert(Alert.AlertType.WARNING,
-                            "Are you sure you want to exit this application?",
-                            ButtonType.OK, ButtonType.CANCEL).showAndWait())) {
-                        Platform.exit();
-                    }
-                } else if (getTabPane().getTabs().size() > 1) {
-                    if (isDirty(event)) confirmExit(event, new Alert(Alert.AlertType.WARNING,
-                            "You have unsaved changes.\nAre you sure you want to close this tab?",
-                            ButtonType.OK, ButtonType.CANCEL).showAndWait());
-                }
-            }
-        });
 
-        export.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        pointer.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        pen.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        line_.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        rect.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        circle.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        text_.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        eraser.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        undo.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        redo.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        clear.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        addPage.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        thicc.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        thiccness.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        colorPicker.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        fontPick.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        bg.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
-                if (bg.getItems().get((Integer) t1).equals("Blank")) {
-                    drawPane.getChildren().remove(iv);
-                } else {
-                    if (!drawPane.getChildren().contains(iv)) {
-                        Image view = new Image(Objects.requireNonNull(getClass().getResource("graph2.jpg"))
-                                .toString(), drawPane.getWidth(), drawPane.getHeight(), false, false);
-                        iv.setImage(view);
-                        drawPane.getChildren().add(iv);
                     }
                 }
-            }
-        });
-        drawPane.addEventHandler(MouseEvent.MOUSE_PRESSED, this::drawPaneMousePressed);
-        drawPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::drawPaneMouseDragged);
-        drawPane.addEventHandler(MouseEvent.MOUSE_RELEASED, this::drawPaneMouseReleased);
-        borderPane.addEventHandler(KeyEvent.KEY_PRESSED, this::borderPaneKeyPressed);
-
-        thicc.setMax(30d);
-        thicc.setMin(1d);
-        thicc.setValue(3d);
-        // colorPicker.setPrefWidth(35d);
-        drawPane.setPrefHeight(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().height);
-        drawPane.setPrefWidth(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().width);
-        drawPane.setCursor(Cursor.CROSSHAIR);
-        drawPane.setId("drawPane");
-        thiccness.setText(String.format("%.0f", thicc.getValue()));
-        thicc.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
+        );
+        this.export.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.pointer.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.pen.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.line_.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.rect.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.circle.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.text_.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.eraser.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.undo.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.redo.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.clear.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.addPage.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.thicc.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.thiccness.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.colorPicker.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.fontPick.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
+        this.bg
+                .getSelectionModel()
+                .selectedIndexProperty()
+                .addListener(new ChangeListener<Number>() {
+                            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                                if (WhiteBoardPage.this.bg.getItems().get((Integer) t1).equals("Blank")) {
+                                    WhiteBoardPage.this.drawPane.getChildren().remove(WhiteBoardPage.this.iv);
+                                } else if (!WhiteBoardPage.this.drawPane.getChildren().contains(WhiteBoardPage.this.iv)) {
+                                    Image view = new Image(
+                                            Objects.requireNonNull(this.getClass().getResource("graph2.jpg")).toString(),
+                                            WhiteBoardPage.this.drawPane.getWidth(),
+                                            WhiteBoardPage.this.drawPane.getHeight(),
+                                            false,
+                                            false
+                                    );
+                                    WhiteBoardPage.this.iv.setImage(view);
+                                    WhiteBoardPage.this.drawPane.getChildren().add(WhiteBoardPage.this.iv);
+                                }
+                            }
+                        }
+                );
+        this.drawPane.addEventHandler(MouseEvent.MOUSE_PRESSED, this::drawPaneMousePressed);
+        this.drawPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::drawPaneMouseDragged);
+        this.drawPane.addEventHandler(MouseEvent.MOUSE_RELEASED, this::drawPaneMouseReleased);
+        this.borderPane.addEventHandler(KeyEvent.KEY_PRESSED, this::borderPaneKeyPressed);
+        this.thicc.setMax(30.0);
+        this.thicc.setMin(1.0);
+        this.thicc.setValue(3.0);
+        this.drawPane.setPrefHeight(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().height);
+        this.drawPane.setPrefWidth(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().width);
+        this.drawPane.setCursor(Cursor.CROSSHAIR);
+        this.drawPane.setId("drawPane");
+        this.thiccness.setText(String.format("%.0f", this.thicc.getValue()));
+        this.thicc.valueProperty().addListener(new ChangeListener<Number>() {
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
-                thiccness.setText(String.valueOf(t1.intValue()));
+                WhiteBoardPage.this.thiccness.setText(String.valueOf(t1.intValue()));
             }
         });
-        colorPicker.setValue(color);
-        colorPicker.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
+        this.colorPicker.setValue(this.color);
+        this.colorPicker.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent actionEvent) {
-                color = colorPicker.getValue();
+                WhiteBoardPage.this.color = WhiteBoardPage.this.colorPicker.getValue();
             }
         });
-        bg.getItems().addAll("Blank", "Graph");
-        bg.getSelectionModel().select(0);
-        export.setGraphic(new FontIcon());
-        export.setId("export");
-        pointer.setGraphic(new FontIcon());
-        pointer.setId("pointer");
-        pen.setGraphic(new FontIcon());
-        pen.setId("pen");
-        line_.setGraphic(new FontIcon());
-        line_.setId("line");
-        rect.setGraphic(new FontIcon());
-        rect.setId("rect");
-        circle.setGraphic(new FontIcon());
-        circle.setId("circle");
-        text_.setGraphic(new FontIcon());
-        text_.setId("text");
-        eraser.setGraphic(new FontIcon());
-        eraser.setId("eraser");
-        undo.setGraphic(new FontIcon());
-        undo.setId("undo");
-        redo.setGraphic(new FontIcon());
-        redo.setId("redo");
-        clear.setGraphic(new FontIcon());
-        clear.setId("clear");
-        fontPick.setGraphic(new FontIcon());
-        fontPick.setId("fontPick");
-        addPage.setGraphic(new FontIcon());
-        addPage.setId("addPage");
-        thicc.setTooltip(new Tooltip("Set line thickness."));
-        colorPicker.setTooltip(new Tooltip("Set color of shape."));
-        bg.setTooltip(new Tooltip("Set background."));
-        fontPick.setTooltip(new Tooltip("Font settings."));
-        addPage.setTooltip(new Tooltip("Add Page."));
-
-        Event.fireEvent(pen, new MouseEvent(MouseEvent.MOUSE_CLICKED, 0,
-                0, 0, 0, MouseButton.PRIMARY, 1, true,
-                true, true, true, true,
-                true, true, true, true,
-                true, null));
-        pen.setSelected(true);
-        setEraserColor();
-
-        toolBar.getItems().addAll(export, pointer, pen, line_, rect, circle, text_, eraser,
-                undo, redo, clear, thicc, thiccness, colorPicker, bg, fontPick, addPage);
-        borderPane.setTop(toolBar);
-        borderPane.setCenter(new ScrollPane(drawPane));
-        this.setContent(borderPane);
+        this.bg.getItems().addAll("Blank", "Graph");
+        this.bg.getSelectionModel().select(0);
+        this.export.setGraphic(new FontIcon());
+        this.export.setId("export");
+        this.pointer.setGraphic(new FontIcon());
+        this.pointer.setId("pointer");
+        this.arrow.setGraphic(new FontIcon());
+        this.arrow.setId("arrow");
+        this.pen.setGraphic(new FontIcon());
+        this.pen.setId("pen");
+        this.line_.setGraphic(new FontIcon());
+        this.line_.setId("line");
+        this.rect.setGraphic(new FontIcon());
+        this.rect.setId("rect");
+        this.circle.setGraphic(new FontIcon());
+        this.circle.setId("circle");
+        this.text_.setGraphic(new FontIcon());
+        this.text_.setId("text");
+        this.eraser.setGraphic(new FontIcon());
+        this.eraser.setId("eraser");
+        this.undo.setGraphic(new FontIcon());
+        this.undo.setId("undo");
+        this.redo.setGraphic(new FontIcon());
+        this.redo.setId("redo");
+        this.clear.setGraphic(new FontIcon());
+        this.clear.setId("clear");
+        this.fontPick.setGraphic(new FontIcon());
+        this.fontPick.setId("fontPick");
+        this.addPage.setGraphic(new FontIcon());
+        this.addPage.setId("addPage");
+        this.thicc.setTooltip(new Tooltip("Set line thickness."));
+        this.colorPicker.setTooltip(new Tooltip("Set color of shape."));
+        this.bg.setTooltip(new Tooltip("Set background."));
+        this.fontPick.setTooltip(new Tooltip("Font settings."));
+        this.addPage.setTooltip(new Tooltip("Add Page."));
+        Event.fireEvent(
+                this.pen,
+                new MouseEvent(MouseEvent.MOUSE_CLICKED, 0.0, 0.0, 0.0, 0.0, MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null)
+        );
+        this.pen.setSelected(true);
+        this.setEraserColor();
+        this.toolBar
+                .getItems()
+                .addAll(
+                        this.export,
+                        this.pointer,
+                        this.arrow,
+                        this.pen,
+                        this.line_,
+                        this.rect,
+                        this.circle,
+                        this.text_,
+                        this.eraser,
+                        this.undo,
+                        this.redo,
+                        this.clear,
+                        this.thicc,
+                        this.thiccness,
+                        this.colorPicker,
+                        this.bg,
+                        this.fontPick,
+                        this.addPage
+                );
+        this.borderPane.setTop(this.toolBar);
+        this.borderPane.setCenter(new ScrollPane(this.drawPane));
+        this.setContent(this.borderPane);
     }
 
     protected boolean isDirty(Event event) {
-        return drawPane.getChildren().contains(iv) ?
-                drawPane.getChildren().size() > 1 : drawPane.getChildren().size() > 0;
+        return this.drawPane.getChildren().contains(this.iv) ? this.drawPane.getChildren().size() > 1 : this.drawPane.getChildren().size() > 0;
     }
 
     public boolean confirmExit(Event event, Optional<ButtonType> dialog) {
@@ -221,335 +264,387 @@ public class WhiteBoardPage extends javafx.scene.control.Tab {
             if (dialog.get() == ButtonType.CANCEL) {
                 event.consume();
                 return false;
+            } else {
+                return true;
             }
-            return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
-    enum Tools {
-        PEN, LINE, RECT, CIRCLE, TEXT, ERASER, POINTER
-    }
-
-    private void setTools(Tools tool) {
+    private void setTools(WhiteBoardPage.Tools tool) {
         this.tool = tool;
     }
 
-    private Tools getTools() {
-        return tool;
+    private WhiteBoardPage.Tools getTools() {
+        return this.tool;
     }
 
     public void toolbarBtnClicked(MouseEvent mouseEvent) {
-        List<ToggleButton> toolbarBtns = Arrays.asList(pen, line_, rect, circle, text_, eraser, pointer);
-        for (int i = 0; i < toolbarBtns.size(); i++) {
+        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle, this.text_, this.eraser, this.pointer);
+
+        for (int i = 0; i < toolbarBtns.size(); ++i) {
             ToggleButton button = toolbarBtns.get(i);
-            if (!(mouseEvent.getSource().equals(button))) {
+            if (!mouseEvent.getSource().equals(button)) {
                 button.setSelected(false);
             } else {
-                hist.add(button);
-                setTools(toolsList.get(i));
+                this.hist.add(button);
+                this.setTools(this.toolsList.get(i));
             }
         }
-        if (undo.equals(mouseEvent.getSource())) {
-            undo();
+
+        if (this.undo.equals(mouseEvent.getSource())) {
+            this.undo();
         }
-        if (redo.equals(mouseEvent.getSource())) {
-            redo();
+
+        if (this.redo.equals(mouseEvent.getSource())) {
+            this.redo();
         }
-        if (fontPick.equals(mouseEvent.getSource())) {
-            FontSelectorDialog fsd = new FontSelectorDialog(new Font(Font.getDefault().getName(), 16));
+
+        if (this.fontPick.equals(mouseEvent.getSource())) {
+            FontSelectorDialog fsd = new FontSelectorDialog(new Font(Font.getDefault().getName(), 16.0));
             Optional<Font> response = fsd.showAndWait();
-            response.ifPresent(font -> defaultFont = font);
-            toolbarBtns.stream().filter(btn -> btn == hist.get(hist.size() - 1)).forEach(btn -> btn.setSelected(true));
+            response.ifPresent(font -> this.defaultFont = font);
+            toolbarBtns.stream().filter(btn -> btn == this.hist.get(this.hist.size() - 1)).forEach(btn -> btn.setSelected(true));
         }
-        if (colorPicker.equals(mouseEvent.getSource())) {
-            toolbarBtns.stream().filter(btn -> btn == hist.get(hist.size() - 1)).forEach(btn -> btn.setSelected(true));
+
+        if (this.colorPicker.equals(mouseEvent.getSource())) {
+            toolbarBtns.stream().filter(btn -> btn == this.hist.get(this.hist.size() - 1)).forEach(btn -> btn.setSelected(true));
         }
-        if (clear.equals(mouseEvent.getSource())) {
-            drawPane.getChildren().removeIf(child -> !child.equals(iv));
-            //drawPane.getChildren().clear();
-            toolbarBtns.stream().filter(btn -> btn == hist.get(hist.size() - 1)).forEach(btn -> btn.setSelected(true));
+
+        if (this.clear.equals(mouseEvent.getSource())) {
+            this.drawPane.getChildren().removeIf(child -> !child.equals(this.iv));
+            toolbarBtns.stream().filter(btn -> btn == this.hist.get(this.hist.size() - 1)).forEach(btn -> btn.setSelected(true));
         }
-        if (export.equals(mouseEvent.getSource())) {
-            saveToFile();
-            toolbarBtns.stream().filter(btn -> btn == hist.get(hist.size() - 1)).forEach(btn -> btn.setSelected(true));
+
+        if (this.export.equals(mouseEvent.getSource())) {
+            this.saveToFile();
+            toolbarBtns.stream().filter(btn -> btn == this.hist.get(this.hist.size() - 1)).forEach(btn -> btn.setSelected(true));
         }
-        if (addPage.equals(mouseEvent.getSource())) {
-            Task<Void> sleeper = new Task<>() {
-                @Override
+
+        if (this.addPage.equals(mouseEvent.getSource())) {
+            Task<Void> sleeper = new Task<Void>() {
                 protected Void call() {
                     try {
-                        Thread.sleep(30);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.sleep(30L);
+                    } catch (InterruptedException var2) {
+                        var2.printStackTrace();
                     }
+
                     return null;
                 }
             };
             sleeper.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-                @Override
                 public void handle(WorkerStateEvent mouseEvent) {
                     WhiteBoardPage wbp = new WhiteBoardPage();
-                    getTabPane().getTabs().add(wbp);
-                    wbp.setText("Page " + counter++);
+                    WhiteBoardPage.this.getTabPane().getTabs().add(wbp);
+                    WhiteBoardPage.this.getTabPane().getSelectionModel().select(wbp);
+                    wbp.setText("Page " + WhiteBoardPage.counter++);
                 }
             });
             new Thread(sleeper).start();
-            toolbarBtns.stream().filter(btn -> btn == hist.get(hist.size() - 1)).forEach(btn -> btn.setSelected(true));
+            toolbarBtns.stream().filter(btn -> btn == this.hist.get(this.hist.size() - 1)).forEach(btn -> btn.setSelected(true));
         }
-        drawPane.setCursor(pointer.equals(mouseEvent.getSource()) ? Cursor.HAND : Cursor.CROSSHAIR);
+
+        this.drawPane.setCursor(this.pointer.equals(mouseEvent.getSource()) ? Cursor.HAND : Cursor.CROSSHAIR);
     }
 
     public void drawPaneMousePressed(MouseEvent mouseEvent) {
-        if (getTools() != null) {
-            if (!mouseEvent.isPrimaryButtonDown()) return;
-            switch (getTools()) {
+        if (this.getTools() != null) {
+            if (!mouseEvent.isPrimaryButtonDown()) {
+                return;
+            }
+
+            Point2D in_parent = this.drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
+            this.x0 = in_parent.getX();
+            this.y0 = in_parent.getY();
+            switch (this.getTools()) {
                 case PEN:
                 case ERASER:
-                    path = new Path();
-                    path.getElements().add(new MoveTo(mouseEvent.getX(), mouseEvent.getY()));
-                    drawPane.getChildren().add(path);
+                    this.path = new Path();
+                    this.path.getElements().add(new MoveTo(mouseEvent.getX(), mouseEvent.getY()));
+                    this.drawPane.getChildren().add(this.path);
                     break;
                 case LINE:
-                    drawLine = new Line(mouseEvent.getX(), mouseEvent.getY(), mouseEvent.getX(), mouseEvent.getY());
-                    drawPane.getChildren().add(drawLine);
+                    this.drawLine = new Line(mouseEvent.getX(), mouseEvent.getY(), mouseEvent.getX(), mouseEvent.getY());
+                    this.drawPane.getChildren().add(this.drawLine);
+                    this.path = new Path();
+                    this.drawPane.getChildren().add(this.path);
                     break;
                 case RECT:
-                    final Point2D in_parent = drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
-                    x0 = in_parent.getX();
-                    y0 = in_parent.getY();
-                    rectangle = new javafx.scene.shape.Rectangle();
-                    rectangle.setX(x0);
-                    rectangle.setY(y0);
-                    rectangle.setWidth(1);
-                    rectangle.setHeight(1);
-                    rectangle.setStroke(color);
-                    rectangle.setStrokeWidth(thicc.getValue());
-                    rectangle.setFill(javafx.scene.paint.Color.TRANSPARENT);
-                    drawPane.getChildren().add(rectangle);
+                    this.rectangle = new Rectangle();
+                    this.rectangle.setX(this.x0);
+                    this.rectangle.setY(this.y0);
+                    this.rectangle.setWidth(1.0);
+                    this.rectangle.setHeight(1.0);
+                    this.rectangle.setStroke(this.color);
+                    this.rectangle.setStrokeWidth(this.thicc.getValue());
+                    this.rectangle.setFill(Color.TRANSPARENT);
+                    this.drawPane.getChildren().add(this.rectangle);
                     mouseEvent.consume();
                     break;
                 case TEXT:
-                    final Point2D parent = drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
-                    x0 = parent.getX();
-                    y0 = parent.getY();
-                    addText = new TextArea();
-                    rectangle = new Rectangle();
-                    rectangle.setX(x0);
-                    rectangle.setY(y0);
-                    rectangle.setWidth(1);
-                    rectangle.setHeight(1);
-                    addText.setPrefWidth(rectangle.getWidth());
-                    addText.setPrefHeight(rectangle.getHeight());
-                    //System.out.println(defaultFont.getName());
-                    //System.out.println(addText.getStyle());
-                    rectangle.setStroke(color);
-                    rectangle.setFill(javafx.scene.paint.Color.TRANSPARENT);
-                    stackPane = new StackPane();
-                    stackPane.setLayoutX(rectangle.getX());
-                    stackPane.setLayoutY(rectangle.getY());
-
-                    stackPane.getChildren().addAll(rectangle, addText);
-                    drawPane.getChildren().add(stackPane);
-                    //drawPane.getChildren().stream().flatMap(node -> ((StackPane) node).getChildren().stream()).forEach(System.out::println);
+                    this.addText = new TextArea();
+                    this.rectangle = new Rectangle();
+                    this.rectangle.setX(this.x0);
+                    this.rectangle.setY(this.y0);
+                    this.rectangle.setWidth(1.0);
+                    this.rectangle.setHeight(1.0);
+                    this.addText.setPrefWidth(this.rectangle.getWidth());
+                    this.addText.setPrefHeight(this.rectangle.getHeight());
+                    this.rectangle.setStroke(this.color);
+                    this.rectangle.setFill(Color.TRANSPARENT);
+                    this.stackPane = new StackPane();
+                    this.stackPane.setLayoutX(this.rectangle.getX());
+                    this.stackPane.setLayoutY(this.rectangle.getY());
+                    this.stackPane.getChildren().addAll(this.rectangle, this.addText);
+                    this.drawPane.getChildren().add(this.stackPane);
                     mouseEvent.consume();
                     break;
                 case CIRCLE:
-                    ellipse = new Ellipse();
-                    ellipse.setFill(Color.TRANSPARENT);
-                    ellipse.setStroke(color);
-                    ellipse.setStrokeWidth(thicc.getValue());
-                    startingPosX = mouseEvent.getX();
-                    startingPosY = mouseEvent.getY();
-                    ellipse.setCenterX(startingPosX);
-                    ellipse.setCenterY(startingPosY);
-                    ellipse.setRadiusX(0);
-                    ellipse.setRadiusY(0);
-                    drawPane.getChildren().add(ellipse);
+                    this.ellipse = new Ellipse();
+                    this.ellipse.setFill(Color.TRANSPARENT);
+                    this.ellipse.setStroke(this.color);
+                    this.ellipse.setStrokeWidth(this.thicc.getValue());
+                    this.startingPosX = mouseEvent.getX();
+                    this.startingPosY = mouseEvent.getY();
+                    this.ellipse.setCenterX(this.startingPosX);
+                    this.ellipse.setCenterY(this.startingPosY);
+                    this.ellipse.setRadiusX(0.0);
+                    this.ellipse.setRadiusY(0.0);
+                    this.drawPane.getChildren().add(this.ellipse);
                     mouseEvent.consume();
-                    break;
             }
         }
+
     }
 
     public void drawPaneMouseDragged(MouseEvent mouseEvent) {
-        if (getTools() != null) {
-            if (!mouseEvent.isPrimaryButtonDown()) return;
-            switch (getTools()) {
+        if (this.getTools() != null) {
+            if (!mouseEvent.isPrimaryButtonDown()) {
+                return;
+            }
+
+            switch (this.getTools()) {
                 case PEN:
-                    path.setStroke(color);
-                    path.setStrokeWidth(thicc.getValue());
-                    path.setStrokeLineJoin(StrokeLineJoin.ROUND);
-                    path.getElements().add(new LineTo(mouseEvent.getX(), mouseEvent.getY()));
+                    this.path.setStroke(this.color);
+                    this.path.setStrokeWidth(this.thicc.getValue());
+                    this.path.setStrokeLineJoin(StrokeLineJoin.ROUND);
+                    this.path.getElements().add(new LineTo(mouseEvent.getX(), mouseEvent.getY()));
                     break;
                 case ERASER:
-                    path.setStroke(eraserColor);
-                    path.setStrokeWidth(thicc.getValue());
-                    path.setStrokeLineJoin(StrokeLineJoin.ROUND);
-                    path.getElements().add(new LineTo(mouseEvent.getX(), mouseEvent.getY()));
+                    this.path.setStroke(this.eraserColor);
+                    this.path.setStrokeWidth(this.thicc.getValue());
+                    this.path.setStrokeLineJoin(StrokeLineJoin.ROUND);
+                    this.path.getElements().add(new LineTo(mouseEvent.getX(), mouseEvent.getY()));
                     break;
                 case LINE:
-                    if (drawLine == null) return;
-                    drawLine.setEndX(mouseEvent.getX());
-                    drawLine.setEndY(mouseEvent.getY());
-                    drawLine.setStroke(color);
-                    drawLine.setStrokeWidth(thicc.getValue());
-                    double mx = Math.max(drawLine.getStartX(), drawLine.getEndX());
-                    double my = Math.max(drawLine.getStartY(), drawLine.getEndY());
-                    if (mx > drawPane.getMinWidth()) drawPane.setMinWidth(mx);
-                    if (my > drawPane.getMinHeight()) drawPane.setMinHeight(my);
+                    if (this.drawLine == null) {
+                        return;
+                    }
+
+                    this.drawLine.setEndX(mouseEvent.getX());
+                    this.drawLine.setEndY(mouseEvent.getY());
+                    this.drawLine.setStroke(this.color);
+                    this.drawLine.setStrokeWidth(this.thicc.getValue());
+                    double mx = Math.max(this.drawLine.getStartX(), this.drawLine.getEndX());
+                    double my = Math.max(this.drawLine.getStartY(), this.drawLine.getEndY());
+                    if (mx > this.drawPane.getMinWidth()) {
+                        this.drawPane.setMinWidth(mx);
+                    }
+
+                    if (my > this.drawPane.getMinHeight()) {
+                        this.drawPane.setMinHeight(my);
+                    }
                     break;
                 case RECT:
-                    final Point2D parent = drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
-                    x1 = parent.getX();
-                    y1 = parent.getY();
-                    rectangle.setX(Math.min(x0, x1));
-                    rectangle.setY(Math.min(y0, y1));
-                    rectangle.setWidth(Math.abs(x1 - x0));
-                    rectangle.setHeight(Math.abs(y1 - y0));
+                    Point2D parent = this.drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
+                    this.x1 = parent.getX();
+                    this.y1 = parent.getY();
+                    this.rectangle.setX(Math.min(this.x0, this.x1));
+                    this.rectangle.setY(Math.min(this.y0, this.y1));
+                    this.rectangle.setWidth(Math.abs(this.x1 - this.x0));
+                    this.rectangle.setHeight(Math.abs(this.y1 - this.y0));
                     break;
                 case TEXT:
-                    final Point2D in_parent = drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
-                    x1 = in_parent.getX();
-                    y1 = in_parent.getY();
-                    rectangle.setX(Math.min(x0, x1));
-                    rectangle.setY(Math.min(y0, y1));
-                    stackPane.setLayoutX(rectangle.getX());
-                    stackPane.setLayoutY(rectangle.getY());
-                    addText.setLayoutX(rectangle.getX());
-                    addText.setLayoutY(rectangle.getY());
-                    rectangle.setWidth(Math.abs(x1 - x0));
-                    rectangle.setHeight(Math.abs(y1 - y0));
-                    addText.setPrefWidth(rectangle.getWidth());
-                    addText.setPrefHeight(rectangle.getHeight());
-                    addText.setStyle("-fx-control-inner-background: " +
-                            String.format("rgba(%d,%d,%d,%.1f)",
-                                    (int) (eraserColor.getRed() * 255),
-                                    (int) (eraserColor.getGreen() * 255),
-                                    (int) (eraserColor.getBlue() * 255), 0.2f) +
-                            "; -fx-text-fill: " +
-                            String.format("#%02X%02X%02X;",
-                                    (int) (color.getRed() * 255),
-                                    (int) (color.getGreen() * 255),
-                                    (int) (color.getBlue() * 255)));
-                    //System.out.println(addText.getStyle());
+                    Point2D in_parent = this.drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
+                    this.x1 = in_parent.getX();
+                    this.y1 = in_parent.getY();
+                    this.rectangle.setX(Math.min(this.x0, this.x1));
+                    this.rectangle.setY(Math.min(this.y0, this.y1));
+                    this.stackPane.setLayoutX(this.rectangle.getX());
+                    this.stackPane.setLayoutY(this.rectangle.getY());
+                    this.addText.setLayoutX(this.rectangle.getX());
+                    this.addText.setLayoutY(this.rectangle.getY());
+                    this.rectangle.setWidth(Math.abs(this.x1 - this.x0));
+                    this.rectangle.setHeight(Math.abs(this.y1 - this.y0));
+                    this.addText.setPrefWidth(this.rectangle.getWidth());
+                    this.addText.setPrefHeight(this.rectangle.getHeight());
+                    this.addText
+                            .setStyle(
+                                    "-fx-control-inner-background: "
+                                            + String.format(
+                                            "rgba(%d,%d,%d,%.1f)",
+                                            (int) (this.eraserColor.getRed() * 255.0),
+                                            (int) (this.eraserColor.getGreen() * 255.0),
+                                            (int) (this.eraserColor.getBlue() * 255.0),
+                                            0.2F
+                                    )
+                                            + "; -fx-text-fill: "
+                                            + String.format(
+                                            "#%02X%02X%02X;", (int) (this.color.getRed() * 255.0), (int) (this.color.getGreen() * 255.0), (int) (this.color.getBlue() * 255.0)
+                                    )
+                            );
                     break;
                 case CIRCLE:
-                    ellipse.setCenterX((mouseEvent.getX() + startingPosX) / 2);
-                    ellipse.setCenterY((mouseEvent.getY() + startingPosY) / 2);
-                    ellipse.setRadiusX(Math.abs((mouseEvent.getX() - startingPosX) / 2));
-                    ellipse.setRadiusY(Math.abs((mouseEvent.getY() - startingPosY) / 2));
-                    break;
+                    this.ellipse.setCenterX((mouseEvent.getX() + this.startingPosX) / 2.0);
+                    this.ellipse.setCenterY((mouseEvent.getY() + this.startingPosY) / 2.0);
+                    this.ellipse.setRadiusX(Math.abs((mouseEvent.getX() - this.startingPosX) / 2.0));
+                    this.ellipse.setRadiusY(Math.abs((mouseEvent.getY() - this.startingPosY) / 2.0));
             }
         }
+
     }
 
     public void drawPaneMouseReleased(MouseEvent mouseEvent) {
-        if (getTools() != null) {
-            switch (getTools()) {
+        if (this.getTools() != null) {
+            switch (this.getTools()) {
                 case PEN:
+                    this.addArrowHead(mouseEvent, false);
                 case ERASER:
-                    path = null;
+                    this.path = null;
                     break;
                 case LINE:
-                    drawLine = null;
+                    this.addArrowHead(mouseEvent, true);
+                    this.drawLine = null;
                     break;
                 case RECT:
-                    rectangle = null;
+                    this.rectangle = null;
                     break;
                 case TEXT:
-                    addText.setFont(defaultFont != null ? defaultFont : new Font(Font.getDefault().getName(), 16));
-                    rectangle = null;
+                    this.addText.setFont(this.defaultFont != null ? this.defaultFont : new Font(Font.getDefault().getName(), 16.0));
+                    this.rectangle = null;
                     break;
                 case CIRCLE:
-                    ellipse = null;
-                    break;
+                    this.ellipse = null;
             }
         }
+
+    }
+
+    private void addArrowHead(MouseEvent mouseEvent, boolean line) {
+        if (this.arrow.isSelected()) {
+            double arrowHeadSize = 13.0;
+            this.endX = mouseEvent.getX();
+            this.endY = mouseEvent.getY();
+            double angle = Math.atan2(this.endY - this.y0, this.endX - this.x0) - Math.PI / 2;
+            double sin = Math.sin(angle);
+            double cos = Math.cos(angle);
+            double x1 = (-0.5 * cos + Math.sqrt(3.0) / 2.0 * sin) * arrowHeadSize + this.endX;
+            double y1 = (-0.5 * sin - Math.sqrt(3.0) / 2.0 * cos) * arrowHeadSize + this.endY;
+            double x2 = (0.5 * cos + Math.sqrt(3.0) / 2.0 * sin) * arrowHeadSize + this.endX;
+            double y2 = (0.5 * sin - Math.sqrt(3.0) / 2.0 * cos) * arrowHeadSize + this.endY;
+            if (line) {
+                this.path.setStroke(this.color);
+                this.path.setStrokeWidth(this.thicc.getValue());
+                this.path.setStrokeLineJoin(StrokeLineJoin.ROUND);
+                this.path.getElements().add(new MoveTo(mouseEvent.getX(), mouseEvent.getY()));
+            }
+
+            this.path.getElements().add(new LineTo(x1, y1));
+            this.path.getElements().add(new LineTo(x2, y2));
+            this.path.getElements().add(new LineTo(this.endX, this.endY));
+        }
+
     }
 
     public void borderPaneKeyPressed(KeyEvent keyEvent) {
         switch (keyEvent.getCode()) {
             case Y:
                 if (keyEvent.isControlDown()) {
-                    redo();
+                    this.redo();
                 }
                 break;
             case Z:
                 if (keyEvent.isShiftDown() && keyEvent.isControlDown()) {
-                    redo();
+                    this.redo();
                 } else if (keyEvent.isControlDown()) {
-                    undo();
+                    this.undo();
                 }
-                break;
         }
+
     }
 
     private void undo() {
-        List<ToggleButton> toolbarBtns = Arrays.asList(pen, line_, rect, circle, text_, eraser, pointer);
-        if (drawPane.getChildren().size() > 0) {
-            last.push(drawPane.getChildren().remove(drawPane.getChildren().size() - 1));
+        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle, this.text_, this.eraser, this.pointer);
+        if (this.drawPane.getChildren().size() > 0) {
+            this.last.push(this.drawPane.getChildren().remove(this.drawPane.getChildren().size() - 1));
         } else {
             Toolkit.getDefaultToolkit().beep();
         }
-        toolbarBtns.stream().filter(btn -> Objects.equals(btn, hist.get(hist.size() - 1)))
-                .forEach(btn -> btn.setSelected(true));
+
+        toolbarBtns.stream().filter(btn -> Objects.equals(btn, this.hist.get(this.hist.size() - 1))).forEach(btn -> btn.setSelected(true));
     }
 
     private void redo() {
-        List<ToggleButton> toolbarBtns = Arrays.asList(pen, line_, rect, circle, text_, eraser, pointer);
-        if (last.size() > 0) {
-            drawPane.getChildren().add(last.pop());
+        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle, this.text_, this.eraser, this.pointer);
+        if (this.last.size() > 0) {
+            this.drawPane.getChildren().add(this.last.pop());
         } else {
             Toolkit.getDefaultToolkit().beep();
         }
-        toolbarBtns.stream().filter(btn -> Objects.equals(btn, hist.get(hist.size() - 1)))
-                .forEach(btn -> btn.setSelected(true));
+
+        toolbarBtns.stream().filter(btn -> Objects.equals(btn, this.hist.get(this.hist.size() - 1))).forEach(btn -> btn.setSelected(true));
     }
 
     private void saveToFile() {
         FileChooser fileChooser = new FileChooser();
-        //Set extension filter
-        fileChooser.getExtensionFilters().add(new FileChooser
-                .ExtensionFilter("PNG files (*.png)", "*.png"));
-        //Prompt user to select a file
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG files (*.png)", "*.png"));
         File file = fileChooser.showSaveDialog(null);
         if (file != null) {
             try {
-                //Pad the capture area
-                WritableImage writableImage = new WritableImage((int) drawPane.getWidth() + 20,
-                        (int) drawPane.getHeight() + 20);
-                drawPane.snapshot(null, writableImage);
+                WritableImage writableImage = new WritableImage((int) this.drawPane.getWidth() + 20, (int) this.drawPane.getHeight() + 20);
+                this.drawPane.snapshot(null, writableImage);
                 RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
-                //Write the snapshot to the chosen file
                 ImageIO.write(renderedImage, "png", file);
-            } catch (IOException ex) {
-                ex.printStackTrace();
+            } catch (IOException var5) {
+                var5.printStackTrace();
             }
         }
+
     }
 
     void setEraserColor() {
-        Task<Void> sleeper = new Task<>() {
-            @Override
+        Task<Void> sleeper = new Task<Void>() {
             protected Void call() {
                 try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.sleep(2000L);
+                } catch (InterruptedException var2) {
+                    var2.printStackTrace();
                 }
+
                 return null;
             }
         };
         sleeper.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-            @Override
             public void handle(WorkerStateEvent mouseEvent) {
-                Bounds boundsInScene = drawPane.localToScene(drawPane.getBoundsInLocal());
-                eraserColor = new Robot().getPixelColor(boundsInScene.getCenterX(), boundsInScene.getCenterY());
-                //System.out.printf("%f, %f%n", drawPane.getWidth(), drawPane.getHeight());
-                //colorPicker.setValue(eraserColor);
+                Bounds boundsInScene = WhiteBoardPage.this.drawPane.localToScene(WhiteBoardPage.this.drawPane.getBoundsInLocal());
+                WhiteBoardPage.this.eraserColor = new Robot().getPixelColor(boundsInScene.getCenterX(), boundsInScene.getCenterY());
             }
         });
         new Thread(sleeper).start();
+    }
+
+    static enum Tools {
+        PEN,
+        LINE,
+        RECT,
+        CIRCLE,
+        TEXT,
+        ERASER,
+        POINTER;
+
+        private Tools() {
+        }
     }
 }
