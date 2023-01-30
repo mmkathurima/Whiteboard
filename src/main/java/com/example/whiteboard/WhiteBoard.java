@@ -21,19 +21,18 @@ public class WhiteBoard extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        final Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(this.getClass().getResource("whiteboard.fxml"))), 1020.0, 600.0);
+        final Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(this.getClass().getResource("whiteboard.fxml"))),
+                1020.0, 600.0);
         scene.getStylesheets().add(String.valueOf(this.getClass().getResource("style.css")));
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                                     public void handle(WindowEvent windowEvent) {
                                         for (Tab t : ((TabPane) scene.getRoot()).getTabs()) {
                                             WhiteBoardPage page = (WhiteBoardPage) t;
-                                            if (page.isDirty(windowEvent)) {
+                                            if (page.isDirty()) {
                                                 page.confirmExit(windowEvent, new Alert(Alert.AlertType.WARNING,
-                                                                "You have unsaved changes.\nAre you sure you want to exit this application?",
-                                                                ButtonType.OK,
-                                                                ButtonType.CANCEL
-                                                        ).showAndWait()
-                                                );
+                                                                "You have unsaved changes.\n" +
+                                                                        "Are you sure you want to exit this application?",
+                                                                ButtonType.OK, ButtonType.CANCEL).showAndWait());
                                                 break;
                                             }
                                         }

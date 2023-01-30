@@ -93,39 +93,39 @@ public class WhiteBoardPage extends Tab {
     public WhiteBoardPage() {
         super();
         this.setOnCloseRequest(new EventHandler<Event>() {
-                    @Override
-                    public void handle(Event event) {
-                        if (WhiteBoardPage.this.getTabPane().getTabs().size() == 1) {
-                            if (WhiteBoardPage.this.isDirty(event)) {
-                                if (WhiteBoardPage.this.confirmExit(
-                                        event,
-                                        new Alert(
-                                                Alert.AlertType.WARNING,
-                                                "You have unsaved changes.\n" +
-                                                        "Are you sure you want to exit this application?",
-                                                ButtonType.OK,
-                                                ButtonType.CANCEL
-                                        ).showAndWait())) {
-                                    Platform.exit();
-                                }
-                            } else if (WhiteBoardPage.this.confirmExit(
-                                    event,
-                                    new Alert(Alert.AlertType.WARNING, "Are you sure you want to exit this application?", ButtonType.OK, ButtonType.CANCEL).showAndWait()
-                            )) {
-                                Platform.exit();
-                            }
-                        } else if (WhiteBoardPage.this.getTabPane().getTabs().size() > 1 && WhiteBoardPage.this.isDirty(event)) {
-                            WhiteBoardPage.this.confirmExit(
-                                    event,
-                                    new Alert(
-                                            Alert.AlertType.WARNING, "You have unsaved changes.\nAre you sure you want to close this tab?", ButtonType.OK, ButtonType.CANCEL
-                                    )
-                                            .showAndWait()
-                            );
-                        }
+                                   @Override
+                                   public void handle(Event event) {
+                                       if (WhiteBoardPage.this.getTabPane().getTabs().size() == 1) {
+                                           if (WhiteBoardPage.this.isDirty()) {
+                                               if (WhiteBoardPage.this.confirmExit(event,
+                                                       new Alert(
+                                                               Alert.AlertType.WARNING,
+                                                               "You have unsaved changes.\n" +
+                                                                       "Are you sure you want to exit this application?",
+                                                               ButtonType.OK,
+                                                               ButtonType.CANCEL
+                                                       ).showAndWait())) {
+                                                   Platform.exit();
+                                               }
+                                           } else if (WhiteBoardPage.this.confirmExit(
+                                                   event,
+                                                   new Alert(Alert.AlertType.WARNING,
+                                                           "Are you sure you want to exit this application?",
+                                                           ButtonType.OK, ButtonType.CANCEL).showAndWait()
+                                           )) Platform.exit();
+                                       } else if (WhiteBoardPage.this.getTabPane().getTabs().size() > 1 &&
+                                               WhiteBoardPage.this.isDirty()) {
+                                           WhiteBoardPage.this.confirmExit(
+                                                   event,
+                                                   new Alert(Alert.AlertType.WARNING,
+                                                           "You have unsaved changes.\n" +
+                                                                   "Are you sure you want to close this tab?",
+                                                           ButtonType.OK, ButtonType.CANCEL).showAndWait()
+                                           );
+                                       }
 
-                    }
-                }
+                                   }
+                               }
         );
         this.export.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
         this.pointer.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
@@ -143,26 +143,24 @@ public class WhiteBoardPage extends Tab {
         this.thiccness.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
         this.colorPicker.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
         this.fontPick.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toolbarBtnClicked);
-        this.bg
-                .getSelectionModel()
+        this.bg.getSelectionModel()
                 .selectedIndexProperty()
                 .addListener(new ChangeListener<Number>() {
-                            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
-                                if (WhiteBoardPage.this.bg.getItems().get((Integer) t1).equals("Blank")) {
-                                    WhiteBoardPage.this.drawPane.getChildren().remove(WhiteBoardPage.this.iv);
-                                } else if (!WhiteBoardPage.this.drawPane.getChildren().contains(WhiteBoardPage.this.iv)) {
-                                    Image view = new Image(
-                                            Objects.requireNonNull(this.getClass().getResource("graph2.jpg")).toString(),
-                                            WhiteBoardPage.this.drawPane.getWidth(),
-                                            WhiteBoardPage.this.drawPane.getHeight(),
-                                            false,
-                                            false
-                                    );
-                                    WhiteBoardPage.this.iv.setImage(view);
-                                    WhiteBoardPage.this.drawPane.getChildren().add(WhiteBoardPage.this.iv);
-                                }
-                            }
-                        }
+                                 public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                                     if (WhiteBoardPage.this.bg.getItems().get((Integer) t1).equals("Blank"))
+                                         WhiteBoardPage.this.drawPane.getChildren().remove(WhiteBoardPage.this.iv);
+                                     else if (!WhiteBoardPage.this.drawPane.getChildren().contains(WhiteBoardPage.this.iv)) {
+                                         Image view = new Image(
+                                                 Objects.requireNonNull(this.getClass().getResource("graph2.jpg"))
+                                                         .toString(), WhiteBoardPage.this.drawPane.getWidth(),
+                                                 WhiteBoardPage.this.drawPane.getHeight(),
+                                                 false, false
+                                         );
+                                         WhiteBoardPage.this.iv.setImage(view);
+                                         WhiteBoardPage.this.drawPane.getChildren().add(WhiteBoardPage.this.iv);
+                                     }
+                                 }
+                             }
                 );
         this.drawPane.addEventHandler(MouseEvent.MOUSE_PRESSED, this::drawPaneMousePressed);
         this.drawPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::drawPaneMouseDragged);
@@ -224,39 +222,25 @@ public class WhiteBoardPage extends Tab {
         this.addPage.setTooltip(new Tooltip("Add Page."));
         Event.fireEvent(
                 this.pen,
-                new MouseEvent(MouseEvent.MOUSE_CLICKED, 0.0, 0.0, 0.0, 0.0, MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null)
+                new MouseEvent(MouseEvent.MOUSE_CLICKED, 0.0, 0.0, 0.0, 0.0, MouseButton.PRIMARY,
+                        1, true, true, true, true, true,
+                        true, true, true, true, true,
+                        null)
         );
         this.pen.setSelected(true);
         this.setEraserColor();
-        this.toolBar
-                .getItems()
-                .addAll(
-                        this.export,
-                        this.pointer,
-                        this.arrow,
-                        this.pen,
-                        this.line_,
-                        this.rect,
-                        this.circle,
-                        this.text_,
-                        this.eraser,
-                        this.undo,
-                        this.redo,
-                        this.clear,
-                        this.thicc,
-                        this.thiccness,
-                        this.colorPicker,
-                        this.bg,
-                        this.fontPick,
-                        this.addPage
-                );
+        this.toolBar.getItems()
+                .addAll(this.export, this.pointer, this.arrow, this.pen, this.line_, this.rect, this.circle,
+                        this.text_, this.eraser, this.undo, this.redo, this.clear, this.thicc, this.thiccness,
+                        this.colorPicker, this.bg, this.fontPick, this.addPage);
         this.borderPane.setTop(this.toolBar);
         this.borderPane.setCenter(new ScrollPane(this.drawPane));
         this.setContent(this.borderPane);
     }
 
-    protected boolean isDirty(Event event) {
-        return this.drawPane.getChildren().contains(this.iv) ? this.drawPane.getChildren().size() > 1 : this.drawPane.getChildren().size() > 0;
+    protected boolean isDirty() {
+        return this.drawPane.getChildren().contains(this.iv) ? this.drawPane.getChildren().size() > 1 :
+                this.drawPane.getChildren().size() > 0;
     }
 
     public boolean confirmExit(Event event, Optional<ButtonType> dialog) {
@@ -264,12 +248,9 @@ public class WhiteBoardPage extends Tab {
             if (dialog.get() == ButtonType.CANCEL) {
                 event.consume();
                 return false;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
+            } else return true;
         }
+        return false;
     }
 
     private void setTools(WhiteBoardPage.Tools tool) {
@@ -281,7 +262,8 @@ public class WhiteBoardPage extends Tab {
     }
 
     public void toolbarBtnClicked(MouseEvent mouseEvent) {
-        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle, this.text_, this.eraser, this.pointer);
+        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle, this.text_,
+                this.eraser, this.pointer);
 
         for (int i = 0; i < toolbarBtns.size(); ++i) {
             ToggleButton button = toolbarBtns.get(i);
@@ -293,13 +275,9 @@ public class WhiteBoardPage extends Tab {
             }
         }
 
-        if (this.undo.equals(mouseEvent.getSource())) {
-            this.undo();
-        }
+        if (this.undo.equals(mouseEvent.getSource())) this.undo();
 
-        if (this.redo.equals(mouseEvent.getSource())) {
-            this.redo();
-        }
+        if (this.redo.equals(mouseEvent.getSource())) this.redo();
 
         if (this.fontPick.equals(mouseEvent.getSource())) {
             FontSelectorDialog fsd = new FontSelectorDialog(new Font(Font.getDefault().getName(), 16.0));
@@ -343,7 +321,8 @@ public class WhiteBoardPage extends Tab {
                 }
             });
             new Thread(sleeper).start();
-            toolbarBtns.stream().filter(btn -> btn == this.hist.get(this.hist.size() - 1)).forEach(btn -> btn.setSelected(true));
+            toolbarBtns.stream().filter(btn -> btn == this.hist.get(this.hist.size() - 1))
+                    .forEach(btn -> btn.setSelected(true));
         }
 
         this.drawPane.setCursor(this.pointer.equals(mouseEvent.getSource()) ? Cursor.HAND : Cursor.CROSSHAIR);
@@ -351,9 +330,7 @@ public class WhiteBoardPage extends Tab {
 
     public void drawPaneMousePressed(MouseEvent mouseEvent) {
         if (this.getTools() != null) {
-            if (!mouseEvent.isPrimaryButtonDown()) {
-                return;
-            }
+            if (!mouseEvent.isPrimaryButtonDown()) return;
 
             Point2D in_parent = this.drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
             this.x0 = in_parent.getX();
@@ -421,9 +398,7 @@ public class WhiteBoardPage extends Tab {
 
     public void drawPaneMouseDragged(MouseEvent mouseEvent) {
         if (this.getTools() != null) {
-            if (!mouseEvent.isPrimaryButtonDown()) {
-                return;
-            }
+            if (!mouseEvent.isPrimaryButtonDown()) return;
 
             switch (this.getTools()) {
                 case PEN:
@@ -439,9 +414,7 @@ public class WhiteBoardPage extends Tab {
                     this.path.getElements().add(new LineTo(mouseEvent.getX(), mouseEvent.getY()));
                     break;
                 case LINE:
-                    if (this.drawLine == null) {
-                        return;
-                    }
+                    if (this.drawLine == null) return;
 
                     this.drawLine.setEndX(mouseEvent.getX());
                     this.drawLine.setEndY(mouseEvent.getY());
@@ -449,13 +422,9 @@ public class WhiteBoardPage extends Tab {
                     this.drawLine.setStrokeWidth(this.thicc.getValue());
                     double mx = Math.max(this.drawLine.getStartX(), this.drawLine.getEndX());
                     double my = Math.max(this.drawLine.getStartY(), this.drawLine.getEndY());
-                    if (mx > this.drawPane.getMinWidth()) {
-                        this.drawPane.setMinWidth(mx);
-                    }
+                    if (mx > this.drawPane.getMinWidth()) this.drawPane.setMinWidth(mx);
 
-                    if (my > this.drawPane.getMinHeight()) {
-                        this.drawPane.setMinHeight(my);
-                    }
+                    if (my > this.drawPane.getMinHeight()) this.drawPane.setMinHeight(my);
                     break;
                 case RECT:
                     Point2D parent = this.drawPane.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
@@ -488,12 +457,13 @@ public class WhiteBoardPage extends Tab {
                                             (int) (this.eraserColor.getRed() * 255.0),
                                             (int) (this.eraserColor.getGreen() * 255.0),
                                             (int) (this.eraserColor.getBlue() * 255.0),
-                                            0.2F
-                                    )
+                                            0.2F)
                                             + "; -fx-text-fill: "
                                             + String.format(
-                                            "#%02X%02X%02X;", (int) (this.color.getRed() * 255.0), (int) (this.color.getGreen() * 255.0), (int) (this.color.getBlue() * 255.0)
-                                    )
+                                            "#%02X%02X%02X;",
+                                            (int) (this.color.getRed() * 255.0),
+                                            (int) (this.color.getGreen() * 255.0),
+                                            (int) (this.color.getBlue() * 255.0))
                             );
                     break;
                 case CIRCLE:
@@ -510,7 +480,7 @@ public class WhiteBoardPage extends Tab {
         if (this.getTools() != null) {
             switch (this.getTools()) {
                 case PEN:
-                    this.addArrowHead(mouseEvent, false);
+                    // this.addArrowHead(mouseEvent, false);
                 case ERASER:
                     this.path = null;
                     break;
@@ -522,7 +492,8 @@ public class WhiteBoardPage extends Tab {
                     this.rectangle = null;
                     break;
                 case TEXT:
-                    this.addText.setFont(this.defaultFont != null ? this.defaultFont : new Font(Font.getDefault().getName(), 16.0));
+                    this.addText.setFont(this.defaultFont != null ? this.defaultFont :
+                            new Font(Font.getDefault().getName(), 16.0));
                     this.rectangle = null;
                     break;
                 case CIRCLE:
@@ -534,7 +505,7 @@ public class WhiteBoardPage extends Tab {
 
     private void addArrowHead(MouseEvent mouseEvent, boolean line) {
         if (this.arrow.isSelected()) {
-            double arrowHeadSize = 13.0;
+            double arrowHeadSize = this.thicc.getValue() * 2;
             this.endX = mouseEvent.getX();
             this.endY = mouseEvent.getY();
             double angle = Math.atan2(this.endY - this.y0, this.endX - this.x0) - Math.PI / 2;
@@ -561,40 +532,34 @@ public class WhiteBoardPage extends Tab {
     public void borderPaneKeyPressed(KeyEvent keyEvent) {
         switch (keyEvent.getCode()) {
             case Y:
-                if (keyEvent.isControlDown()) {
-                    this.redo();
-                }
+                if (keyEvent.isControlDown()) this.redo();
                 break;
             case Z:
-                if (keyEvent.isShiftDown() && keyEvent.isControlDown()) {
-                    this.redo();
-                } else if (keyEvent.isControlDown()) {
-                    this.undo();
-                }
+                if (keyEvent.isShiftDown() && keyEvent.isControlDown()) this.redo();
+                else if (keyEvent.isControlDown()) this.undo();
         }
 
     }
 
     private void undo() {
-        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle, this.text_, this.eraser, this.pointer);
-        if (this.drawPane.getChildren().size() > 0) {
+        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle,
+                this.text_, this.eraser, this.pointer);
+        if (this.drawPane.getChildren().size() > 0)
             this.last.push(this.drawPane.getChildren().remove(this.drawPane.getChildren().size() - 1));
-        } else {
-            Toolkit.getDefaultToolkit().beep();
-        }
+        else Toolkit.getDefaultToolkit().beep();
 
-        toolbarBtns.stream().filter(btn -> Objects.equals(btn, this.hist.get(this.hist.size() - 1))).forEach(btn -> btn.setSelected(true));
+        toolbarBtns.stream().filter(btn -> Objects.equals(btn, this.hist.get(this.hist.size() - 1)))
+                .forEach(btn -> btn.setSelected(true));
     }
 
     private void redo() {
-        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle, this.text_, this.eraser, this.pointer);
-        if (this.last.size() > 0) {
-            this.drawPane.getChildren().add(this.last.pop());
-        } else {
-            Toolkit.getDefaultToolkit().beep();
-        }
+        List<ToggleButton> toolbarBtns = Arrays.asList(this.pen, this.line_, this.rect, this.circle,
+                this.text_, this.eraser, this.pointer);
+        if (this.last.size() > 0) this.drawPane.getChildren().add(this.last.pop());
+        else Toolkit.getDefaultToolkit().beep();
 
-        toolbarBtns.stream().filter(btn -> Objects.equals(btn, this.hist.get(this.hist.size() - 1))).forEach(btn -> btn.setSelected(true));
+        toolbarBtns.stream().filter(btn -> Objects.equals(btn, this.hist.get(this.hist.size() - 1)))
+                .forEach(btn -> btn.setSelected(true));
     }
 
     private void saveToFile() {
@@ -603,7 +568,8 @@ public class WhiteBoardPage extends Tab {
         File file = fileChooser.showSaveDialog(null);
         if (file != null) {
             try {
-                WritableImage writableImage = new WritableImage((int) this.drawPane.getWidth() + 20, (int) this.drawPane.getHeight() + 20);
+                WritableImage writableImage = new WritableImage((int) this.drawPane.getWidth() + 20,
+                        (int) this.drawPane.getHeight() + 20);
                 this.drawPane.snapshot(null, writableImage);
                 RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
                 ImageIO.write(renderedImage, "png", file);
@@ -628,8 +594,10 @@ public class WhiteBoardPage extends Tab {
         };
         sleeper.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
             public void handle(WorkerStateEvent mouseEvent) {
-                Bounds boundsInScene = WhiteBoardPage.this.drawPane.localToScene(WhiteBoardPage.this.drawPane.getBoundsInLocal());
-                WhiteBoardPage.this.eraserColor = new Robot().getPixelColor(boundsInScene.getCenterX(), boundsInScene.getCenterY());
+                Bounds boundsInScene = WhiteBoardPage.this.drawPane.localToScene(WhiteBoardPage.this.drawPane
+                        .getBoundsInLocal());
+                WhiteBoardPage.this.eraserColor = new Robot().getPixelColor(boundsInScene.getCenterX(),
+                        boundsInScene.getCenterY());
             }
         });
         new Thread(sleeper).start();
