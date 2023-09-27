@@ -4,7 +4,6 @@ module com.example.whiteboard {
     requires javafx.swing;
     requires java.desktop;
     requires org.kordamp.ikonli.javafx;
-    requires org.kordamp.bootstrapfx.core;
     requires controlsfx;
 
     opens com.example.whiteboard to javafx.fxml;
